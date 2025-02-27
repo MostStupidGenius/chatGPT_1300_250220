@@ -18,19 +18,29 @@ set /p second=알람 초를 입력하세요 (기본값: 0):
 if "%second%"=="" set second=0
 
 echo 알람 시간이 설정되었습니다: !hour!시 !minute!분 !second!초
-
+pause
 :loop
 :: 현재 시간 가져오기
-echo 현재 시간을 가져오는 중...
-for /f "tokens=1,2,3 delims=:" %%a in ('time /t') do (
-    set currentHour=%%a
-    set currentMinute=%%b
-    set currentSecond=%%c
+echo 현재 시간 가져오는 중...
+# Start of Selection
+:: WMIC 명령어를 사용하여 현재 로컬 날짜 및 시간을 가져옵니다.
+for /f "skip=1 tokens=*" %%A in ('wmic os get localdatetime') do (
+    set ldt=%%A
+    goto afterWmic
 )
+:afterWmic
+set ldt=%ldt:~0,14%
+echo 가져온 원본 시간 데이터: %ldt%
+set currentHour=%ldt:~8,2%
+set currentMinute=%ldt:~10,2%
+set currentSecond=%ldt:~12,2%
+
 echo 현재 시간: !currentHour!시 !currentMinute!분 !currentSecond!초
 
 :: 남은 시간 계산
 set /a remainingSeconds=(%hour%*3600 + %minute%*60 + %second%) - (%currentHour%*3600 + %currentMinute%*60 + %currentSecond%)
+
+echo 계산된 남은 초: !remainingSeconds!
 
 if !remainingSeconds! gtr 0 (
     set /a hoursRemaining=!remainingSeconds!/3600
